@@ -1,5 +1,5 @@
-import { parseMermaid } from '../src/parser';
-import { VsdxGenerator } from '../src/vsdx';
+import { parseMermaid } from '../src/core/parser';
+import { VsdxGenerator } from '../src/core/vsdx';
 
 describe('Mermaid to Visio Conversion', () => {
   it('should generate a valid VSDX buffer from a simple graph', async () => {

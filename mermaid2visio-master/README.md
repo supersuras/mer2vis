@@ -30,19 +30,27 @@ npm install
 npm run build
 ```
 
+For deployment options (Docker, global CLI, server), see [docs/deployment.md](docs/deployment.md).
+
 ## Usage
 
 ### 1. Web GUI (Recommended)
 Visual editor with live preview.
 ```bash
-node dist/gui.js
+node dist/gui/index.js
 ```
 Opens `http://localhost:3000` in your browser. Paste Mermaid code, verify the preview, and download the `.vsdx`.
 
 ### 2. Command Line (CLI)
 Convert files in bulk or via scripts.
 ```bash
-node dist/index.js input.mmd [output.vsdx]
+node dist/cli/index.js input.mmd [output.vsdx]
+```
+
+#### Stdin (non-web alternative)
+Pipe Mermaid definitions directly without launching the GUI:
+```bash
+cat diagram.mmd | node dist/cli/index.js - --output output.vsdx
 ```
 
 ### 3. AI Agent Integration (MCP)
@@ -55,7 +63,7 @@ Add this tool to your AI assistant (e.g., Claude Desktop) to give it "Visio Skil
     "mermaid2visio": {
       "command": "node",
       "args": [
-        "/absolute/path/to/mermaid2visio/dist/server.js"
+        "/absolute/path/to/mermaid2visio/dist/mcp/server.js"
       ]
     }
   }

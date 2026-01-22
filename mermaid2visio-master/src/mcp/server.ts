@@ -2,9 +2,10 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { parseMermaid } from './parser.js';
-import { VsdxGenerator } from './vsdx.js';
+import { parseMermaid } from '../core/parser.js';
+import { VsdxGenerator } from '../core/vsdx.js';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 const server = new Server(
@@ -71,14 +72,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // Output Path
       let outFile = args.outputPath;
       if (!outFile) {
-          const tmpDir = path.join(cwd, 'output');
-          if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
+          const tmpDir = path.join(os.tmpdir(), 'mermaid2visio');
+          if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
           outFile = path.join(tmpDir, `diagram_${timestamp}.vsdx`);
       }
 
       // Execute Conversion
-      const graph = await parseMermaid(mermaidCode);
+      const extraArgs = process.env.MERMAID2VISIO_PUPPETEER_ARGS
+        ? JSON.parse(process.env.MERMAID2VISIO_PUPPETEER_ARGS)
+        : [];
+      const graph = await parseMermaid(mermaidCode, { launchOptions: { args: extraArgs } });
       const generator = new VsdxGenerator();
       const buffer = await generator.generate(graph);
       

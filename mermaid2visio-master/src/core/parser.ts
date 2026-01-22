@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser, LaunchOptions } from 'puppeteer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -84,12 +84,23 @@ export interface GraphData {
     height: number;
 }
 
-export async function parseMermaid(definition: string): Promise<GraphData> {
-    const browser = await puppeteer.launch({ headless: true });
+export interface ParseMermaidOptions {
+    browser?: Browser;
+    launchOptions?: LaunchOptions;
+}
+
+export async function parseMermaid(definition: string, options: ParseMermaidOptions = {}): Promise<GraphData> {
+    const defaultArgs = ['--no-sandbox', '--disable-setuid-sandbox'];
+    const launchOptions: LaunchOptions = {
+        headless: true,
+        ...options.launchOptions,
+        args: [...defaultArgs, ...(options.launchOptions?.args ?? [])]
+    };
+    const browser = options.browser ?? await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
 
     // Inject Mermaid from node_modules
-    const mermaidPath = path.resolve(__dirname, '../node_modules/mermaid/dist/mermaid.min.js');
+    const mermaidPath = path.resolve(__dirname, '../../node_modules/mermaid/dist/mermaid.min.js');
     await page.addScriptTag({ path: mermaidPath });
 
     await page.setContent(`
@@ -339,6 +350,8 @@ export async function parseMermaid(definition: string): Promise<GraphData> {
 
         return result;
     } finally {
-        await browser.close();
+        if (!options.browser) {
+            await browser.close();
+        }
     }
 }

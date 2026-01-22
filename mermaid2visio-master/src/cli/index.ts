@@ -1,30 +1,37 @@
 import fs from 'fs';
-import path from 'path';
 import { program } from 'commander';
-import { parseMermaid } from './parser.js';
-import { VsdxGenerator } from './vsdx.js';
+import { parseMermaid } from '../core/parser.js';
+import { VsdxGenerator } from '../core/vsdx.js';
 
 // Read package.json for version
-const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+const packageJson = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'));
 
 program
   .name('mermaid2visio')
   .description('Convert Mermaid diagrams to editable Microsoft Visio (.vsdx) files')
   .version(packageJson.version)
   .argument('<input>', 'Path to the input .mmd or .md file')
+  .option('--stdin', 'Read Mermaid definition from stdin')
   .option('-o, --output <path>', 'Path to the output .vsdx file')
   .option('-v, --verbose', 'Enable verbose logging')
+  .option('--puppeteer-args <json>', 'JSON array of additional Puppeteer launch arguments')
   .action(async (inputFile, options) => {
     try {
-        if (!fs.existsSync(inputFile)) {
+        const useStdin = options.stdin || inputFile === '-';
+        if (!useStdin && !fs.existsSync(inputFile)) {
             console.error(`Error: Input file not found: ${inputFile}`);
             process.exit(1);
         }
 
-        const outputFile = options.output || inputFile.replace(/\.(mmd|md)$/i, '') + '.vsdx';
+        const outputFile = options.output || (useStdin ? 'diagram.vsdx' : inputFile.replace(/\.(mmd|md)$/i, '') + '.vsdx');
         
         if (options.verbose) console.log(`Reading ${inputFile}...`);
-        let definition = fs.readFileSync(inputFile, 'utf-8');
+        let definition = '';
+        if (useStdin) {
+            definition = fs.readFileSync(0, 'utf-8');
+        } else {
+            definition = fs.readFileSync(inputFile, 'utf-8');
+        }
 
         // Markdown Support: Extract mermaid block
         if (inputFile.endsWith('.md') || definition.includes('```mermaid')) {
@@ -39,7 +46,8 @@ program
         }
 
         if (options.verbose) console.log("Parsing Mermaid...");
-        const graph = await parseMermaid(definition);
+        const extraArgs = options.puppeteerArgs ? JSON.parse(options.puppeteerArgs) : [];
+        const graph = await parseMermaid(definition, { launchOptions: { args: extraArgs } });
         
         if (options.verbose) {
             console.log(`Parsed graph:`);
