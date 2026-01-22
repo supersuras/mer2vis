@@ -22,16 +22,16 @@ This will:
 
 - **`tests/`**: Contains all test files (`*.test.ts`).
 - **`tests/fixtures/`**: Contains sample `.mmd` files used for manual or integration testing.
-- **`src/parser.ts`**: The core parsing logic being tested.
-- **`src/vsdx.ts`**: The VSDX generation logic being tested.
+- **`src/core/parser.ts`**: The core parsing logic being tested.
+- **`src/core/vsdx.ts`**: The VSDX generation logic being tested.
 
 ## Adding New Tests
 
 1. Create a new file in `tests/` (e.g., `tests/styling.test.ts`).
 2. Import the necessary modules:
    ```typescript
-   import { parseMermaid } from '../src/parser';
-   import { VsdxGenerator } from '../src/vsdx';
+   import { parseMermaid } from '../src/core/parser';
+   import { VsdxGenerator } from '../src/core/vsdx';
    ```
 3. Write your test case using `describe` and `it`.
 4. Run `npm test` to verify.
@@ -41,7 +41,7 @@ This will:
 For quick manual verification, you can run the CLI against the fixture files:
 
 ```bash
-node dist/index.js tests/fixtures/test.mmd
+node dist/cli/index.js tests/fixtures/test.mmd
 ```
 
 This will generate `tests/fixtures/test.vsdx`, which you can open in Visio to visually inspect.

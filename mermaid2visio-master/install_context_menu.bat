@@ -1,7 +1,7 @@
 @echo off
 set "PROJECT_DIR=%~dp0"
 set "NODE_EXE=node"
-set "SCRIPT_PATH=%PROJECT_DIR%dist\index.js"
+set "SCRIPT_PATH=%PROJECT_DIR%dist\cli\index.js"
 
 echo Installing Mermaid2Visio Context Menu...
 echo Project Directory: %PROJECT_DIR%

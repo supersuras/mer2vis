@@ -2,8 +2,8 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { parseMermaid } from './parser.js';
-import { VsdxGenerator } from './vsdx.js';
+import { parseMermaid } from '../core/parser.js';
+import { VsdxGenerator } from '../core/vsdx.js';
 import { exec } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +21,12 @@ const PORT = 3000;
 // In production (dist), the public folder is alongside the js files.
 // In dev (src), it is in ../src/public relative to __dirname (which is dist or src).
 // Let's rely on the copy step.
-const PUBLIC_DIR = path.join(__dirname, 'public');  
+const publicCandidates = [
+    path.join(__dirname, 'public'),
+    path.join(__dirname, '..', 'public'),
+    path.join(process.cwd(), 'src', 'public')
+];
+const PUBLIC_DIR = publicCandidates.find(candidate => fs.existsSync(candidate)) ?? publicCandidates[0];
 
 const server = http.createServer(async (req, res) => {
     // Serve Index
@@ -44,7 +49,10 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 console.log("Received conversion request...");
-                const graph = await parseMermaid(body);
+                const extraArgs = process.env.MERMAID2VISIO_PUPPETEER_ARGS
+                    ? JSON.parse(process.env.MERMAID2VISIO_PUPPETEER_ARGS)
+                    : [];
+                const graph = await parseMermaid(body, { launchOptions: { args: extraArgs } });
                 const generator = new VsdxGenerator();
                 const buffer = await generator.generate(graph);
 
